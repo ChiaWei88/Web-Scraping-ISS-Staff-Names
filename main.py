@@ -16,7 +16,7 @@ jobTitles = filter(lambda x: x != "", jobTitles)
 jobTitles = list(jobTitles)
 
 emails = soup.select("#ISS_Main_T467AEC33012_Col00 my-email");
-emails = map(lambda x: x["data-user"]+x["data-domain"], emails)
+emails = map(lambda x: x["data-user"]+"@"+x["data-domain"], emails)
 emails = list(emails)
 
 # Make sure data count is same, else throw an exception
