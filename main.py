@@ -1,6 +1,10 @@
 import requests
+import json
 from bs4 import BeautifulSoup
 
+# web scrap individual staff url
+# data has set type, no duplicated values
+# nullEmails is indexes of nth-staff who does not have email on site
 def scrap(url, data, nullEmails = []):
     # Initialization
     html = requests.get(url).text
@@ -11,76 +15,54 @@ def scrap(url, data, nullEmails = []):
     names = map(lambda x: x.text.strip(), names)
     names = list(names)
 
-    jobTitles = soup.select("#ISS_Main_T467AEC33012_Col00 h3")
-    jobTitles = jobTitles[1::2]
-    jobTitles = map(lambda x: x.text.strip(), jobTitles)
-    jobTitles = list(jobTitles)
+    titles = soup.select("#ISS_Main_T467AEC33012_Col00 h3")
+    titles = titles[0::2]
+    titles = map(lambda x: x.text.strip(), titles)
+    titles = list(titles)
 
     emails = soup.select("#ISS_Main_T467AEC33012_Col00 my-email");
     emails = map(lambda x: x["data-user"].strip()+"@"+x["data-domain"].strip(), emails)
     emails = list(emails)
 
+    # Insert blank entry into emails
     for i in nullEmails:
         emails.insert(i, "")
 
-    # Make sure data count is same, else throw an exception
-    dataCounts = [len(names), len(jobTitles), len(emails)]
+    # Error checking. Make sure data count is same, else throw an exception
+    dataCounts = [len(names), len(titles), len(emails)]
     if(len(set(dataCounts)) > 1):
-        raise Exception("The data count is different! in " + url);
+        raise Exception("The data count is different in " + url);
 
     # Print all the data
     count = len(names)
     for i in range(0, count):
-        data.add(','.join([names[i], jobTitles[i], emails[i]]))
+        data.add('|'.join([names[i],
+                           titles[i],
+                           emails[i]]))
 
-    print("Done: " + url)
+    print("scrap() executed successfully for " + url)
 
 def scrapAll(urls):
+    # Define a set for storing data to avoid duplication.
     data = set()
+
+    # Special case, missing emails for some staffs
     for url in urls:
         if(url=="https://www.iss.nus.edu.sg/about-us/iss-team/adjunct-staff"):
-            # Special case, email is missing for 5th staff
             scrap(url, data, [5])
         elif(url=="https://www.iss.nus.edu.sg/about-us/iss-team/adjunct-staff/2"):
             scrap(url, data, [0])
         else:
             scrap(url, data)
 
+    # Write data into csv file
     with open('data.csv', 'w') as csvWriter:
         for d in data:
             csvWriter.write(d + "\n")
 
-urls = ["https://www.iss.nus.edu.sg/about-us/iss-team/management",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/centres-of-excellence",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/practice-chiefs",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/graduate-programme-chiefs",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/teaching-staff",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/teaching-staff/2",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/teaching-staff/3",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/teaching-staff/analytics-intelligent-systems",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/teaching-staff/digital-innovation-design",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/teaching-staff/it-service-management",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/teaching-staff/it-strategy-management",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/teaching-staff/project-management",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/teaching-staff/software-engineering-design",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/teaching-staff/startup-smes",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/administration-staff",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/administration-staff/2",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/administration-staff/3",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/administration-staff/administration",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/administration-staff/administration-directors",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/administration-staff/business-development",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/administration-staff/career-services",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/administration-staff/director's-office",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/administration-staff/executive-education",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/administration-staff/finance",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/administration-staff/graduate-programme",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/administration-staff/graduate-programme-recruitment",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/administration-staff/human-resource",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/administration-staff/it-services",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/administration-staff/marketing-communications",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/administration-staff/quality-management",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/adjunct-staff",
-        "https://www.iss.nus.edu.sg/about-us/iss-team/adjunct-staff/2"]
+    print("scrapAll() executed successfully.")
+
+with open('config.json') as config:
+    urls = json.load(config)["urls"]
 
 scrapAll(urls)
