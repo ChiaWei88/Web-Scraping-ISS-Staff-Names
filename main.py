@@ -8,9 +8,8 @@ with open('config.json') as config:
     delimiter = settings["delimiter"]
     targetUrls = settings["urls"]
 
-# web scrap individual staff url
-# data has set type, no duplicated values
-# nullEmails is indexes of nth-staff who does not have email on site
+# Web scrap individual staff url
+# Parameter "data" is a set with guarantee of no duplicated records
 def scrap(url, data):
     # Initialization
     names = []
@@ -20,6 +19,7 @@ def scrap(url, data):
     soup = BeautifulSoup(html, 'html.parser')
     profiles = soup.select("#ISS_Main_T467AEC33012_Col00 .block-profile-thumb");
 
+    # Extract information based on css selectors
     for profile in profiles:
         element_name = profile.select_one("h2 a")
         element_title = profile.select_one("h3")
@@ -43,7 +43,7 @@ def scrap(url, data):
 
     print("scrap() executed successfully for " + url)
 
-
+# Web scrap on a list of urls
 def scrapAll(urls):
     # Define a set for storing data to avoid duplication.
     data = set()
