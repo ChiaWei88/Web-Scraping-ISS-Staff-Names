@@ -29,3 +29,10 @@ count = len(names)
 for i in range(0, count):
     print('{0}. {1} has position of "{2}" with email "{3}".'
           .format(i+1, names[i], jobTitles[i], emails[i]))
+
+with open('data.csv', 'w') as f:
+    f.write("Name, Rank, Title, Email" + "\n")
+    for i in range(0, count):
+        f.write(",".join([names[i], jobTitles[i], emails[i]]) + "\n")
+
+
