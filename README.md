@@ -5,6 +5,7 @@ Use Python library BeautifulSoup to extract staffs' profile from [NUS ISS websit
 * requests
 * json
 * BeautifulSoup
+* Pandas
 
 # Instruction
 * Type "python main.py" in command prompt and run.
