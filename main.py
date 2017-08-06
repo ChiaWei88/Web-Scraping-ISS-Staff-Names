@@ -38,8 +38,8 @@ def scrap(url, data):
             "data-domain"].strip() if element_email is not None else "")
 
     # Store the concatenated values with delimiter
-    for i in range(0, len(names)):
-        data.add(delimiter.join([names[i], titles[i], emails[i]]))
+    for (name, title, email) in list(zip(names, titles, emails)):
+        data.add(delimiter.join([name, title, email]))
 
     print("scrap() executed successfully for " + url)
 
