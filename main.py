@@ -1,15 +1,9 @@
 import requests
 import json
 from bs4 import BeautifulSoup
-
-# Load configurations
-with open('config.json') as config:
-    settings = json.load(config)
-    delimiter = settings["delimiter"]
-    targetUrls = settings["urls"]
+import pandas as pd
 
 # Web scrap individual staff url
-# Parameter "data" is a set with guarantee of no duplicated records
 def scrap(url, data):
     # Initialization
     names = []
@@ -27,41 +21,44 @@ def scrap(url, data):
 
         # Skip the records if is blank profile
         if (element_name is None and
-                    element_title is None and
-                    element_email is None): continue
+            element_title is None and
+            element_email is None): continue
 
         # At least one of the attribute is not blank
         # Save the data in corresponding list
         names.append(element_name.text.strip() if element_name is not None else "")
         titles.append(element_title.text.strip() if element_title is not None else "")
-        emails.append(element_email["data-user"].strip() + "@" + element_email[
-            "data-domain"].strip() if element_email is not None else "")
+        emails.append(element_email["data-user"].strip() + "@" + element_email["data-domain"].strip() if element_email is not None else "")
 
     # Store the concatenated values with delimiter
     for (name, title, email) in list(zip(names, titles, emails)):
-        data.add(delimiter.join([name, title, email]))
+        value = {
+            "name": name,
+            "title": title,
+            "email": email
+        }
+        if value not in data:
+            data.append(value);
 
     print("scrap() executed successfully for " + url)
 
 # Web scrap on a list of urls
 def scrapAll(urls):
-    # Define a set for storing data to avoid duplication.
-    data = set()
 
-    # Special case, missing emails for some staffs
+    data = []
     for url in urls:
         scrap(url, data)
 
-    # Write data into csv file
-    with open('data.csv', 'w') as csvWriter:
-        # Print header
-        csvWriter.write(delimiter.join(["Name", "Title", "Email(s)"]) + "\n")
+    # Print to csv file
+    df = pd.DataFrame(data)
+    df.to_csv('data.csv')
 
-        # Print body
-        for d in data:
-            csvWriter.write(d + "\n")
-
-    print("scrapAll() executed successfully.")
+    print("scrapAll() executed successfully. Data is saved in 'data.csv'")
 
 # Main execution
-scrapAll(targetUrls)
+with open('config.json') as config:
+    settings = json.load(config)
+    targetUrls = settings["urls"]
+    scrapAll(targetUrls)
+
+
